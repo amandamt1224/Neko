@@ -43,15 +43,13 @@ def makeIndices(cSize, numFrames):
 	return indices
 
 
-def writeToOutput(predictions, start, end, f, writer, coordsArr):
+def writeToOutput(predictions, start, end, writer, coordsArr):
 	
 	for i in range(0, predictions.shape[0]):
-		if predictions[i][1] > .4:
+		if predictions[i][1] >= .8:
 			circX = coordsArr[i + start][0]+32
 			circY = coordsArr[i + start][1]+32
 			p = predictions[i][1]
-			#print type(p)
-			#print type(circX)
 			writer.writerow([circX, circY, p])
 
 
@@ -64,18 +62,17 @@ def coordsToFrames(image, coordsArr, start, end):
 		x = coordsArr[i][0]
 		y = coordsArr[i][1]
 		window = image[y:y + 64, x:x + 64]
-		window = window[:, :, np.newaxis]
-		window = skimage.img_as_float(window).astype(np.float32) 			
+		#window = window[:, :, np.newaxis]
+		#window = skimage.img_as_float(window).astype(np.float32) 			
 		frameArr.append(window.copy())
 	return frameArr
 
 def workerFunc(q, coordsArr, image, fileName, idNumber):
 	f = open(fileName, 'w')
 	writer = csv.writer(f, delimiter=",")
-	print "Process enters workerFunc"
 	#load caffe files and initialize Classifier
-	mean = np.load('/home/amt29588/vision/mean_test.npy')
-	net = caffe.Classifier('/home/amt29588/vision/cifar10_quick.prototxt', '/home/amt29588/vision/cifar10_quick_iter_10000.caffemodel', mean=mean, image_dims=(64,64),raw_scale=255)
+	mean = np.load('/home/amt29588/vision/pool_stuff/make_pools_all/out.npy')
+	net = caffe.Classifier('/home/amt29588/vision/pool_stuff/make_pools_all/pools_quick.prototxt', '/home/amt29588/vision/pool_stuff/make_pools_all/pools_quick_iter_2000.caffemodel', mean=mean, image_dims=(64,64),raw_scale=255, channel_swap=(2,1,0))
 	#this beginning verison will just use GPU mode
 	if idNumber < 4:
 		caffe.set_mode_gpu()
@@ -88,13 +85,9 @@ def workerFunc(q, coordsArr, image, fileName, idNumber):
 		end = task[1]
 		print start
 		print end
-		print "!!!!process going into coords to frames"
 		picArr = coordsToFrames(image, coordsArr, start, end)
-		print "!!!!process out of coords to frames" 
 		predictions = net.predict(picArr)
-		print "!!!process out of predictions"
-		#should I write to input in this function or after? so far i think hereeee
-		print "!!!process is about to write to picture"
-		writeToOutput(predictions, start, end, f, writer, coordsArr)
-		print "!!!!process has written to picture"
+		writeToOutput(predictions, start, end, writer, coordsArr)
 		q.task_done()
+
+

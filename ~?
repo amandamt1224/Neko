@@ -5,9 +5,8 @@ import skimage
 import time
 import imutils
 import caffe
-import csv
-#from Queue import Queue
-import multiprocessing
+from Queue import Queue
+from threading import Thread
 
 #from pyimagesearch.com
 def sliding_window(image, stepSize, windowSize):
@@ -43,16 +42,12 @@ def makeIndices(cSize, numFrames):
 	return indices
 
 
-def writeToOutput(predictions, start, end, f, writer, coordsArr):
-	
+def writeToOutput(predictions, start, end, outImage, coordsArr):
 	for i in range(0, predictions.shape[0]):
 		if predictions[i][1] > .4:
 			circX = coordsArr[i + start][0]+32
 			circY = coordsArr[i + start][1]+32
-			p = predictions[i][1]
-			#print type(p)
-			#print type(circX)
-			writer.writerow([circX, circY, p])
+			cv2.circle(outImage, (circX, circY), 4, 255, -1)
 
 
 
@@ -69,18 +64,13 @@ def coordsToFrames(image, coordsArr, start, end):
 		frameArr.append(window.copy())
 	return frameArr
 
-def workerFunc(q, coordsArr, image, fileName, idNumber):
-	f = open(fileName, 'w')
-	writer = csv.writer(f, delimiter=",")
-	print "Process enters workerFunc"
+def workerFunc(q, coordsArr, image, outImage):
+	print "Thread enters workerFunc"
 	#load caffe files and initialize Classifier
 	mean = np.load('/home/amt29588/vision/mean_test.npy')
 	net = caffe.Classifier('/home/amt29588/vision/cifar10_quick.prototxt', '/home/amt29588/vision/cifar10_quick_iter_10000.caffemodel', mean=mean, image_dims=(64,64),raw_scale=255)
 	#this beginning verison will just use GPU mode
-	if idNumber < 4:
-		caffe.set_mode_gpu()
-	else:
-		caffe.set_mode_cpu()	
+	caffe.set_mode_gpu()
 	while True:
 		task = q.get() #this will be in the format (start coords #, end coords #)
 		#modify make blocks to take indices of image
@@ -88,13 +78,13 @@ def workerFunc(q, coordsArr, image, fileName, idNumber):
 		end = task[1]
 		print start
 		print end
-		print "!!!!process going into coords to frames"
+		print "!!!!thread going into coords to frames"
 		picArr = coordsToFrames(image, coordsArr, start, end)
-		print "!!!!process out of coords to frames" 
+		print "!!!!thread out of coords to frames" 
 		predictions = net.predict(picArr)
-		print "!!!process out of predictions"
+		print "!!!thread out of predictions"
 		#should I write to input in this function or after? so far i think hereeee
-		print "!!!process is about to write to picture"
-		writeToOutput(predictions, start, end, f, writer, coordsArr)
-		print "!!!!process has written to picture"
+		print "!!!Thread is about to write to picture"
+		writeToOutput(predictions, start, end, outImage, coordsArr)
+		print "!!!!Thread has written to picture"
 		q.task_done()
