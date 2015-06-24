@@ -69,6 +69,7 @@ def coordsToFrames(image, coordsArr, start, end):
 def workerFunc(q, coordsArr, image, fileName, idNumber):
 	f = open(fileName, 'wb')
 	writer = csv.writer(f, delimiter=",")
+	print "Process enters workerFunc"
 	#load caffe files and initialize Classifier
 	mean = np.load('/home/amt29588/vision/mean_test.npy')
 	net = caffe.Classifier('/home/amt29588/vision/cifar10_quick.prototxt', '/home/amt29588/vision/cifar10_quick_iter_10000.caffemodel', mean=mean, image_dims=(64,64),raw_scale=255)
