@@ -45,10 +45,10 @@ def makeIndices(cSize, numFrames):
 	return indices
 
 
-def writeToOutput(predictions, start, end, coordsArr):
+def writeToOutput(predictions, start, end, coordsArr, threshold):
 	
 	for i in range(0, predictions.shape[0]):
-		if predictions[i][1] >= .8:
+		if predictions[i][1] >= threshold:
 			circX = coordsArr[i + start][0]+32
 			circY = coordsArr[i + start][1]+32
 			p = predictions[i][1]
@@ -106,7 +106,7 @@ def writeToPic(filename):
 	image = cv2.imread(filename)
 	
 	output = image.copy()
-	with open('output/coords.csv') as csvfile:
+	with open('coords.csv') as csvfile:
 		reader = csv.reader(csvfile, delimiter=',')
 		for row in reader:
 			cv2.circle(output, (int(row[0]), int(row[1])), 4, 255, -1)

@@ -14,6 +14,7 @@ ap.add_argument("-i", "--image", required=True,type=str, help="Path to image")
 ap.add_argument("-c", "--chunkSize", type=int, help="Set chunk size", default=4000)
 ap.add_argument("-p", "--processes", required=True, type=int, help="Set number of processes")
 ap.add_argument("-s", "--stepSize", type=int, help="Set frame step size", default=8)
+ap.add_argument("-t", "--threshold", type=float, help="Set prediction threshold (example: .80)", default=.80)
 args = ap.parse_args()
 
 
@@ -37,9 +38,9 @@ if len(coordsArr) <= cSize:
 	predictions = np.empty([numFrames, 2])
 	picArr = coordsToFrames(image, coordsArr, 0, len(coordsArr))
 	predictions = net.predict(picArr)
-	f = open("coords0.csv", "wb")
-	writer = csv.writer(f, delimiter=",")
-	writeToOutput(predictions, 0, len(coordsArr), writer, coordsArr)
+	sys.stdout = open(fileName, 'wb')
+	writeToOutput(predictions, 0, len(coordsArr), coordsArr, args.threshold)
+	sys.stdout.flush()
 	quit()
 
 #if you have more than one block make some new processes
@@ -50,7 +51,7 @@ num_processes = args.processes
 #add code to pick best number of processes
 for i in range(num_processes):
 	fileName = "output/coords%d.csv" %i
-	worker = Process(target=workerFunc, args=(q, coordsArr, image, fileName, i,))
+	worker = Process(target=workerFunc, args=(q, coordsArr, image, fileName, i, args.threshold,))
 	worker.daemon = True
 	worker.start()
 

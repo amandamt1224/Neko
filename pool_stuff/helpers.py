@@ -45,10 +45,10 @@ def makeIndices(cSize, numFrames):
 	return indices
 
 
-def writeToOutput(predictions, start, end, coordsArr):
+def writeToOutput(predictions, start, end, coordsArr, threshold):
 	
 	for i in range(0, predictions.shape[0]):
-		if predictions[i][1] >= .8:
+		if predictions[i][1] >= threshold:
 			circX = coordsArr[i + start][0]+32
 			circY = coordsArr[i + start][1]+32
 			p = predictions[i][1]
@@ -70,7 +70,7 @@ def coordsToFrames(image, coordsArr, start, end):
 		frameArr.append(window.copy())
 	return frameArr
 
-def workerFunc(q, coordsArr, image, fileName, idNumber):
+def workerFunc(q, coordsArr, image, fileName, idNumber, threshold):
 	sys.stdout = open(fileName, 'wb')
 	#load caffe files and initialize Classifier
 	mean = np.load('/home/amt29588/vision/pool_stuff/out.npy')
@@ -87,7 +87,7 @@ def workerFunc(q, coordsArr, image, fileName, idNumber):
 		end = task[1]
 		picArr = coordsToFrames(image, coordsArr, start, end)
 		predictions = net.predict(picArr)
-		writeToOutput(predictions, start, end, coordsArr)
+		writeToOutput(predictions, start, end, coordsArr, threshold)
 		sys.stdout.flush()
 		q.task_done()
 
