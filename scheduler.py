@@ -15,7 +15,7 @@ args = ap.parse_args()
 
 
 #calculate how many batches we will make
-image = cv2.imread()
+image = cv2.imread(args.image)
 image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 height = image.shape[0]
 width = image.shape[1]
@@ -59,7 +59,7 @@ for j in range(0, len(indices)):
 q.join()
 
 combineOutput(num_processes)
-
+writeToPic(args.image)
 
 
 

@@ -58,8 +58,8 @@ for j in range(0, len(indices)):
 
 q.join()
 
-
-
+combineOutput(num_processes)
+writeToPic(args.image)
 
 
 
