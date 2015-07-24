@@ -20,6 +20,7 @@ ap.add_argument("-i", "--image", required=True, help="Path to the image")
 args = vars(ap.parse_args())
 # load the image and define the window width and height
 image = cv2.imread(args["image"])
+#image = cv2.imread(args["image"],cv2.CV_LOAD_IMAGE_GRAYSCALE)
 (winW, winH) = (64,64)
 output = image.copy()
 for (x,y,window) in sliding_window.sliding_window(image,stepSize = 8, windowSize=(winW, winH)):
