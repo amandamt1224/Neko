@@ -4,6 +4,7 @@ import argparse
 from multiprocessing import JoinableQueue, Process
 #from Queue import Queue
 from helpers import *
+import sys
 
 #load arguments
 ap = argparse.ArgumentParser()
@@ -11,7 +12,12 @@ ap.add_argument("-i", "--image", required=True, type=str, help="Path to image")
 ap.add_argument("-c", "--chunkSize", type=int, help="Set chunk size", default=4000)
 ap.add_argument("-p", "--processes", required=True, type=int, help="Set number of processes")
 ap.add_argument("-s", "--stepSize", type=int, help="Set frame step size", default=8)
+ap.add_argument("-t", "--threshold", type=float, help="Set prediction threshold (example: .80)", default=.80)
 args = ap.parse_args()
+
+PROTO = '/home/amt29588/vision/gray_model/cars_quick.prototxt'
+MODEL = '/home/amt29588/vision/gray_model/cars_quick_iter_10000.caffemodel'
+MEAN = np.load('/home/amt29588/vision/gray_model/out.npy')  
 
 
 #calculate how many batches we will make
@@ -26,20 +32,24 @@ cSize = int(args.chunkSize)
 #predictions = np.empty([numFrames, 2])
 coordsArr = makeCoords(64, 64, args.stepSize, image)
 
+
+#this only runs if your batch size is greater than or equal to your total number of frames
 if len(coordsArr) <= cSize:
 	#load caffe files and initialize Classifier
-	mean = np.load('/home/amt29588/vision/mean_test.npy')
-	net = caffe.Classifier('/home/amt29588/vision/cifar10_quick.prototxt', '/home/amt29588/vision/cifar10_quick_iter_10000.caffemodel', mean=mean, image_dims=(64,64),raw_scale=255)
-	#this beginning verison will just use GPU mode
-	caffe.set_mode_gpu()
-	predictions = np.empty([numFrames, 2])
+	net = caffe.Classifier(PROTO, MODEL, mean=MEAN, image_dims=(64,64),raw_scale=255)
+	caffe.set_mode_gpu() #USES GPU BY DEFAULT
+	#predictions = np.empty([numFrames, 2])
 	picArr = coordsToFrames(image, coordsArr, 0, len(coordsArr))
 	predictions = net.predict(picArr)
-	f = open("coords0.csv", "wb")
-	writeToOutput(predictions, 0, len(coordsArr), writer, coordsArr)	
+	filename = "output/coords0.csv"
+	sys.stdout = open(filename, 'wb')
+	writeToOutput(predictions, 0, len(coordsArr), coordsArr, args.threshold)
+	sys.stdout.flush()
+	combineOutput(args.processes)
+	writeToPic(args.image, args.threshold)	
 	quit()
 
-#if you have more than one block make some new processes
+#if you have more than one batch make some new processes
 
 q = JoinableQueue(maxsize=0)
 num_processes = args.processes
@@ -47,7 +57,7 @@ num_processes = args.processes
 
 for i in range(num_processes):
 	fileName = "output/coords%d.csv" %i
-	worker = Process(target=workerFunc, args=(q, coordsArr, image, fileName, i,))
+	worker = Process(target=workerFunc, args=(q, coordsArr, image, fileName, i, args.threshold, PROTO, MODEL, MEAN,))
 	worker.daemon = True
 	worker.start()
 
@@ -59,7 +69,7 @@ for j in range(0, len(indices)):
 q.join()
 
 combineOutput(num_processes)
-writeToPic(args.image)
+writeToPic(args.image, args.threshold)
 
 
 

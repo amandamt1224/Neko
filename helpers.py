@@ -6,6 +6,7 @@ import time
 import imutils
 import caffe
 import csv
+import sys
 #from Queue import Queue
 import multiprocessing
 
@@ -15,6 +16,7 @@ def sliding_window(image, stepSize, windowSize):
 		for x in xrange(0, image.shape[1], stepSize):
 			yield (x, y, (image[y:y + windowSize[1], x:x + windowSize[0]]))
 
+#make and array of all of the coordinates of all of the centroids of every frame
 def makeCoords(blockW, blockH, step, imageArr):
 	coordsArr = []
 	i = 0
@@ -28,9 +30,9 @@ def makeCoords(blockW, blockH, step, imageArr):
 	                                                       
 	return coordsArr	
 
-
+#makes array of coordinate array indices to be used in task queue
 def makeIndices(cSize, numFrames):
-	numChunks = numFrames/cSize
+	numChunks = int(numFrames/cSize)
 	lastIndex = numFrames - (cSize * numChunks)
 	indices = []
 	i = 0
@@ -38,23 +40,25 @@ def makeIndices(cSize, numFrames):
 	for i in range(0, cSize *(numChunks), cSize):
 		indices.append((i, i+cSize))
 		x += 1
-	indices.append((i + cSize, numFrames))
+	if i + cSize < numFrames:
+		indices.append((i, numFrames))
 	return indices
 
 
-def writeToOutput(predictions, start, end, writer, coordsArr):
+def writeToOutput(predictions, start, end, coordsArr, threshold):
 	
 	for i in range(0, predictions.shape[0]):
-		if predictions[i][1] > .4:
-			circX = coordsArr[i + start][0]+32
-			circY = coordsArr[i + start][1]+32
-			p = predictions[i][1]
-			writer.writerow([circX, circY, p])
+		
+		#if predictions[i][1] >= threshold:
+		circX = coordsArr[i + start][0]+32
+		circY = coordsArr[i + start][1]+32
+		p = predictions[i][1] 
+		print str(circX) + "," + str(circY) + "," + str(p)
 
 
 
 
-
+#this turns the coordinates into actual image frames
 def coordsToFrames(image, coordsArr, start, end):
 	frameArr = []
 	for i in range(start, end):
@@ -66,12 +70,10 @@ def coordsToFrames(image, coordsArr, start, end):
 		frameArr.append(window.copy())
 	return frameArr
 
-def workerFunc(q, coordsArr, image, fileName, idNumber):
-	f = open(fileName, 'wb')
-	writer = csv.writer(f, delimiter=",")
-	#load caffe files and initialize Classifier
-	mean = np.load('/home/amt29588/vision/mean_test.npy')
-	net = caffe.Classifier('/home/amt29588/vision/cifar10_quick.prototxt', '/home/amt29588/vision/cifar10_quick_iter_10000.caffemodel', mean=mean, image_dims=(64,64),raw_scale=255)
+def workerFunc(q, coordsArr, image, fileName, idNumber, threshold, PROTO, MODEL, MEAN):
+	sys.stdout = open(fileName, 'wb')
+	#load caffe files and initialize Classifier 
+	net = caffe.Classifier(PROTO, MODEL, mean=MEAN, image_dims=(64,64),raw_scale=255)
 	#this beginning verison will just use GPU mode
 	if idNumber < 4:
 		caffe.set_mode_gpu()
@@ -84,27 +86,29 @@ def workerFunc(q, coordsArr, image, fileName, idNumber):
 		end = task[1]
 		picArr = coordsToFrames(image, coordsArr, start, end) 
 		predictions = net.predict(picArr)
-		writeToOutput(predictions, start, end, writer, coordsArr)
+		writeToOutput(predictions, start, end, coordsArr, threshold)
+		sys.stdout.flush()
 		q.task_done()
 
 def combineOutput(numProcesses):
-	fout = open("output/coords.csv", "a")
+	fout = open("coords.csv", "a")
 	for line in open("output/coords0.csv"):
 		fout.write(line)
 	for i in range(1,numProcesses):
-		f = open("output/coords"+str(i)+".csv")
+		f = open("output/" + "coords" + str(i) + ".csv")
 		for line in f:
 			fout.write(line)
 		f.close()
 	fout.close
 
-def writeToPic(filename):	
+def writeToPic(filename, threshold):	
 	image = cv2.imread(filename)
 	
 	output = image.copy()
-	with open('output/coords.csv') as csvfile:
+	with open('coords.csv') as csvfile:
 		reader = csv.reader(csvfile, delimiter=',')
 		for row in reader:
-			cv2.circle(output, (int(row[0]), int(row[1])), 4, 255, -1)
+			if float(row[2]) >= threshold:
+				cv2.circle(output, (int(row[0]), int(row[1])), 4, 255, -1)
 	cv2.imwrite("output.jpg", output)
 
