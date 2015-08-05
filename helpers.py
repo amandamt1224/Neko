@@ -65,7 +65,7 @@ def coordsToFrames(image, coordsArr, start, end):
 		x = coordsArr[i][0]
 		y = coordsArr[i][1]
 		window = image[y:y + 64, x:x + 64]
-		window = window[:, :, np.newaxis]
+		#window = window[:, :, np.newaxis]
 		window = skimage.img_as_float(window).astype(np.float32) 			
 		frameArr.append(window.copy())
 	return frameArr

@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import argparse
 from multiprocessing import JoinableQueue, Process
-#from Queue import Queue
 from helpers import *
 import sys
 
@@ -15,14 +14,14 @@ ap.add_argument("-s", "--stepSize", type=int, help="Set frame step size", defaul
 ap.add_argument("-t", "--threshold", type=float, help="Set prediction threshold (example: .80)", default=.80)
 args = ap.parse_args()
 
-PROTO = '/home/amt29588/vision/gray_model/cars_quick.prototxt'
-MODEL = '/home/amt29588/vision/gray_model/cars_quick_iter_10000.caffemodel'
-MEAN = np.load('/home/amt29588/vision/gray_model/out.npy')  
+PROTO = '/home/amt29588/vision/new_model_kerr_7-21/cars_quick.prototxt'
+MODEL = '/home/amt29588/vision/new_model_kerr_7-21/cars_quick_iter_10000.caffemodel'
+MEAN = np.load('/home/amt29588/vision/new_model_kerr_7-21/out.npy')  
 
 
 #calculate how many batches we will make
 image = cv2.imread(args.image)
-image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+#image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 height = image.shape[0]
 width = image.shape[1]
 xFrames = int(width/args.stepSize) - (int(64/args.stepSize)-1) #(width/step size) - (frameSize/step size - 1)
