@@ -10,9 +10,10 @@
 #include <opencv2/core/core.hpp>
 #include <string>
 #include <iostream>
-
+#include "classifier.cpp"
 //using namespace std;
 using namespace cv;
+
 
 
 /// Global Variables
@@ -29,7 +30,7 @@ string MEAN = "MEAN"
 
 int main(int argc, char ** argv){
 
-	Mat input = imread("IMAGE_NAME", 1) //image will be loaded without alpha channel
+	cv::Mat input = imread("IMAGE_NAME", 1) //image will be loaded without alpha channel
 		if(!input.data){
 			cout << "Could not open or find the image";
 			return -1;
@@ -39,9 +40,24 @@ int main(int argc, char ** argv){
 	int xFrames = int(width/STEP_SIZE) - (int(FRAME_SIZE/STEP_SIZE)-1) //(width/STEP_SIZE) - ((FRAME_SIZE/STEP_SIZE)-1)
 	int yFrames = int(height/STEP_SIZE) - (int(FRAME_SIZE/STEP_SIZE)-1) //(height/STEP_SIZE) - ((FRAME_SIZE/STEP_SIZE)-1)
 	int numFrames = yFrames * xFrames;
-	std::vector<std::pair<int, int>> = makeCoords(FRAME_SIZE, FRAME_SIZE, STEP_SIZE, input);
+	std::vector<std::pair<int, int>> * coordsArr = makeCoords(FRAME_SIZE, FRAME_SIZE, STEP_SIZE, input);
 	
+if(coordsArr.size() <= CHUNK_SIZE){
+	Classifier classifier = Classifier::Classifier(MODEL, PROTO, MEAN, true, coordsArr.size());
+	std::vector<cv::Mat> frames = makeFrames();
+	std::vector<prediction> predictArray= classifier.ClassifyBatch(frames,1);
+	for(int i = 0; i < predictArray.size(); i++){
+			if() //if this prediction is over the threshold
 
+
+	}
+
+
+
+
+
+
+}
 
 
 
