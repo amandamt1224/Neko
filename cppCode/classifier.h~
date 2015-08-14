@@ -24,7 +24,7 @@ class Classifier {
              const string& mean_file,
 			bool GPU_mode);
 
-  std::vector<float> Classify(const cv::Mat& img, int N);
+  float Classify(const cv::Mat& img, int N);
 
  private:
   void SetMean(const string& mean_file);

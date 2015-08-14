@@ -11,6 +11,8 @@
 #ifndef CLASSIFIER_H
 #define CLASSIFIER_H
 
+//modified version of https://github.com/BVLC/caffe/tree/master/examples/cpp_classification
+
 using namespace caffe;  // NOLINT(build/namespaces)
 using std::string;
 

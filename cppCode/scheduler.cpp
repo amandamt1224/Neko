@@ -18,10 +18,10 @@
 
 int STEP_SIZE = 8;
 int PROC_NUM = 30;  
-int BATCH_SIZE = 4000;
+int BATCH_SIZE = 5000;
 int FRAME_SIZE = 64; 
-float THRESHOLD = .50; 
-string IMAGE_NAME = "../12TVK440400.tif"; 
+float THRESHOLD = .40; 
+string IMAGE_NAME = "../cars.jpg"; 
 string OUTPUT_NAME = "test_output.jpg";
 string MODEL = "../gray_model/cars_quick.prototxt"; 
 string PROTO = "../gray_model/cars_quick_iter_10000.caffemodel"; 
