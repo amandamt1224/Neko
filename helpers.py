@@ -31,16 +31,16 @@ def makeCoords(blockW, blockH, step, imageArr):
 	return coordsArr	
 
 #makes array of coordinate array indices to be used in task queue
-def makeIndices(cSize, numFrames):
-	numChunks = int(numFrames/cSize)
-	lastIndex = numFrames - (cSize * numChunks)
+def makeIndices(bSize, numFrames):
+	numChunks = int(numFrames/bSize)
+	lastIndex = numFrames - (bSize * numChunks)
 	indices = []
 	i = 0
 	x = 0
-	for i in range(0, cSize *(numChunks), cSize):
-		indices.append((i, i+cSize))
+	for i in range(0, bSize *(numChunks), bSize):
+		indices.append((i, i+bSize))
 		x += 1
-	if i + cSize < numFrames:
+	if i + bSize < numFrames:
 		indices.append((i, numFrames))
 	return indices
 

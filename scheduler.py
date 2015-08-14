@@ -8,7 +8,7 @@ import sys
 #load arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True, type=str, help="Path to image")
-ap.add_argument("-c", "--chunkSize", type=int, help="Set chunk size", default=4000)
+ap.add_argument("-c", "--batchSize", type=int, help="Set batch size", default=4000)
 ap.add_argument("-p", "--processes", required=True, type=int, help="Set number of processes")
 ap.add_argument("-s", "--stepSize", type=int, help="Set frame step size", default=8)
 ap.add_argument("-t", "--threshold", type=float, help="Set prediction threshold (example: .80)", default=.80)
@@ -27,7 +27,7 @@ width = image.shape[1]
 xFrames = int(width/args.stepSize) - (int(64/args.stepSize)-1) #(width/step size) - (frameSize/step size - 1)
 yFrames = int(height/args.stepSize) - (int(64/args.stepSize)-1) #(height/step size) - (frameSize/step size - 1) 
 numFrames = xFrames * yFrames
-cSize = int(args.chunkSize)
+cSize = int(args.batchSize)
 #predictions = np.empty([numFrames, 2])
 coordsArr = makeCoords(64, 64, args.stepSize, image)
 
